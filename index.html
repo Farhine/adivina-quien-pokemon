@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tablero Adivina Quién Pokémon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap">
+<style>
+:root{
+--ground:#EEF1F7; --surface:#FFFFFF; --surface-2:#E3E8F2; --ink:#18203A; --ink-2:#56607A; --line:#CBD3E3;
+--accent:#2F5BD3; --accent-ink:#FFFFFF; --accent-soft:#DCE5FB; --cross:#D6453D; --crossed-bg:#D9DEE8;
+--shadow:0 1px 2px rgba(24,32,58,.08),0 2px 8px rgba(24,32,58,.06);
+--f-display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+--f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+--f-num:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--ground:#0F1424; --surface:#182036; --surface-2:#222C46; --ink:#E8ECF7; --ink-2:#9AA5C2; --line:#2E3A5A;
+--accent:#7B9BFF; --accent-ink:#0F1424; --accent-soft:#25325A; --cross:#FF6B61; --crossed-bg:#131A2C;
+--shadow:0 1px 2px rgba(0,0,0,.4);
+}}
+:root[data-theme="dark"]{
+--ground:#0F1424; --surface:#182036; --surface-2:#222C46; --ink:#E8ECF7; --ink-2:#9AA5C2; --line:#2E3A5A;
+--accent:#7B9BFF; --accent-ink:#0F1424; --accent-soft:#25325A; --cross:#FF6B61; --crossed-bg:#131A2C;
+--shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.45 var(--f-body);padding-inline:16px;padding-block:0 40px}
+.wrap{max-width:1400px;margin:0 auto}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:20px 16px}
+h1{font:800 clamp(24px,4vw,34px)/1.05 var(--f-display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1 small{display:block;font:600 12px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px}
+.count{font-family:var(--f-num);font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:8px}
+.count b{font-size:40px;line-height:1;font-weight:600;color:var(--accent)}
+.count span{color:var(--ink-2);font-size:17px}
+.layout{display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:900px){.layout{grid-template-columns:290px 1fr;align-items:start}
+.panel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:18px}
+.panel summary{display:none}
+@media (max-width:899px){
+details.filters{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+details.filters>summary{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-weight:600;cursor:pointer;list-style:none}
+details.filters>summary::-webkit-details-marker{display:none}
+details.filters .panel{border:0;border-top:1px solid var(--line);border-radius:0 0 14px 14px}
+}
+@media (min-width:900px){details.filters>summary{display:none}}
+.group{display:flex;flex-direction:column;gap:8px}
+.label{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center}
+.label button{font:500 12px var(--f-body);letter-spacing:0;text-transform:none;background:none;border:0;color:var(--accent);cursor:pointer;padding:0}
+input[type=search]{width:100%;font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+input[type=search]:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 13px/1 var(--f-body);padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.gen{font-family:var(--f-num);font-size:16px;font-weight:600;min-width:40px;justify-content:center}
+.chip.type .dot{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.chip.type[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.swatches{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sw{aspect-ratio:1;max-width:100%;border-radius:10px;border:1px solid var(--line);background:var(--c);cursor:pointer;position:relative}
+.sw[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
+.sw span{position:absolute;inset:auto 0 -2px;font-size:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{font:600 12px var(--f-body);border:0;background:none;color:var(--ink-2);padding:5px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink)}
+.toggle{display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.btn{font:600 13px/1.2 var(--f-body);padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer;text-align:center}
+.btn.primary{background:var(--cross);border-color:var(--cross);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.hint{font-size:12.5px;color:var(--ink-2);margin:0}
+.status{font-size:13px;color:var(--ink-2);min-height:1.2em;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px 9px;background:var(--surface);border:1px solid var(--line);border-radius:12px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;box-shadow:var(--shadow);transition:transform .12s,background .12s}
+.card:hover{transform:translateY(-1px)}
+.card .num{font:500 13px/1 var(--f-num);color:var(--ink-2);font-variant-numeric:tabular-nums;align-self:flex-start}
+.card .spr{width:64px;height:64px;image-rendering:pixelated;background-repeat:no-repeat}
+.card img.spr{object-fit:contain}
+.card .name{font:600 13px/1.15 var(--f-body);overflow-wrap:anywhere}
+.card .types{display:flex;gap:3px;margin-top:2px}
+.card .types i{width:18px;height:5px;border-radius:3px;background:var(--c)}
+.card.x{background:var(--crossed-bg);box-shadow:none}
+.card.x .spr{filter:grayscale(1);opacity:.28}
+.card.x .name{text-decoration:line-through;text-decoration-color:var(--cross);text-decoration-thickness:2px;color:var(--ink-2)}
+.card.x::after{content:"";position:absolute;inset:14px 18px 34px;background:
+linear-gradient(to top right,transparent calc(50% - 2px),var(--cross) calc(50% - 2px),var(--cross) calc(50% + 2px),transparent calc(50% + 2px)),
+linear-gradient(to top left,transparent calc(50% - 2px),var(--cross) calc(50% - 2px),var(--cross) calc(50% + 2px),transparent calc(50% + 2px));opacity:.85;pointer-events:none}
+.card.off{display:none}
+.empty{padding:40px 16px;text-align:center;color:var(--ink-2)}
+footer{margin-top:24px;font-size:12px;color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+</style>
+<div class="wrap">
+<header class="top">
+<h1><small id="sub">Adivina Quién · Pokémon</small>Tu tablero</h1>
+<div class="count" aria-live="polite"><b id="left">0</b><span id="leftOf">de 0 siguen en pie</span></div>
+</header>
+<div class="layout">
+<details class="filters" id="filtersBox" open>
+<summary><span>Filtros y acciones</span><span id="activeSum" class="hint"></span></summary>
+<div class="panel">
+<div class="group">
+<label class="label" for="q">Buscar</label>
+<input type="search" id="q" placeholder="Nombre o número…" autocomplete="off">
+</div>
+<div class="group">
+<div class="label">Generaciones en juego <button type="button" id="genAll">Todas</button></div>
+<div class="chips" id="gens"></div>
+<p class="hint">Solo las generaciones marcadas cuentan como posibles.</p>
+</div>
+<div class="group">
+<div class="label">Tipo
+<span class="seg" role="group" aria-label="Cómo combinar tipos">
+<button type="button" id="modeAny" aria-pressed="true">Alguno</button>
+<button type="button" id="modeAll" aria-pressed="false">Todos</button>
+</span>
+</div>
+<div class="chips" id="types"></div>
+</div>
+<div class="group">
+<div class="label">Color <button type="button" id="clearFilters">Quitar filtros</button></div>
+<div class="swatches" id="colors"></div>
+</div>
+<label class="toggle"><input type="checkbox" id="hideX"> Ocultar tachados</label>
+<div class="group">
+<div class="label">Tachar según la respuesta</div>
+<div class="actions">
+<button type="button" class="btn primary" id="xShown" title="La respuesta fue NO: se tachan los que coinciden con el filtro">Respuesta “no”: tachar los que se ven</button>
+<button type="button" class="btn primary" id="xRest" title="La respuesta fue SÍ: se tachan los que no coinciden con el filtro">Respuesta “sí”: tachar el resto</button>
+<button type="button" class="btn" id="undo">Deshacer</button>
+<button type="button" class="btn" id="reset">Reiniciar tablero</button>
+</div>
+<p class="hint">Ejemplo: preguntas “¿eres tipo Agua?”. Filtra Agua y, si te dicen que no, toca el primer botón.</p>
+</div>
+</div>
+</details>
+<main>
+<p class="status" id="status"></p>
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" hidden>Ningún Pokémon coincide con estos filtros.</div>
+<footer>Toca un Pokémon para tacharlo o destacharlo. Tu progreso se guarda en este navegador.</footer>
+</main>
+</div>
+</div>
+<script>
+const CSV="https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/";
+const TIPO_ID=["","normal","fighting","flying","poison","ground","rock","bug","ghost","steel","fire","water","grass","electric","psychic","ice","dragon","dark","fairy"];
+async function leerCSV(n){const t=(await (await fetch(CSV+n+".csv")).text()).replace(/\r/g,"");const [h,...rs]=t.trim().split("\n");const k=h.split(",");return rs.map(r=>{const v=r.split(",");return Object.fromEntries(k.map((x,i)=>[x,v[i]]))});}
+async function cargarPokedex(){
+const [esp,formas,tipos,colores]=await Promise.all(["pokemon_species","pokemon","pokemon_types","pokemon_colors"].map(leerCSV));
+const col=Object.fromEntries(colores.map(c=>[c.id,c.identifier]));
+const def=Object.fromEntries(formas.filter(f=>f.is_default==="1").map(f=>[f.species_id,f.id]));
+const tp={};tipos.sort((a,b)=>a.slot-b.slot).forEach(t=>{if(TIPO_ID[+t.type_id])(tp[t.pokemon_id]=tp[t.pokemon_id]||[]).push(TIPO_ID[+t.type_id])});
+return esp.map(e=>({id:+e.id,nombre:e.identifier,generacion:+e.generation_id,color:col[e.color_id]||"gray",tipos:tp[def[e.id]]||[]})).sort((a,b)=>a.id-b.id);}
+(async()=>{
+document.getElementById("status").textContent="Cargando Pokédex…";
+let POKEDEX;
+try{POKEDEX=await cargarPokedex();}catch(err){document.getElementById("status").textContent="No se pudo cargar la Pokédex. Revisa tu conexión y recarga la página.";return;}
+const CONFIG = {"gens":[],"partida":"web","titulo":"Adivina Quién · Pokémon","sprite":{"mode":"url","url":"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{id}.png"}};
+const TYPES = {normal:["Normal","#A8A77A"],fire:["Fuego","#EE8130"],water:["Agua","#6390F0"],electric:["Eléctrico","#D9B21A"],grass:["Planta","#62B03A"],ice:["Hielo","#5FC4C0"],fighting:["Lucha","#C22E28"],poison:["Veneno","#A33EA1"],ground:["Tierra","#C9A548"],flying:["Volador","#8E72E6"],psychic:["Psíquico","#F95587"],bug:["Bicho","#94A816"],rock:["Roca","#A6912A"],ghost:["Fantasma","#735797"],dragon:["Dragón","#6F35FC"],dark:["Siniestro","#705746"],steel:["Acero","#8E8EAE"],fairy:["Hada","#D685AD"]};
+const COLORS = {red:["Rojo","#E03C31"],blue:["Azul","#3B6FE0"],yellow:["Amarillo","#F2CF2E"],green:["Verde","#4CAF50"],black:["Negro","#2A2A2E"],brown:["Marrón","#8B5A2B"],purple:["Morado","#8A4FC2"],gray:["Gris","#9EA3AD"],white:["Blanco","#F7F7F7"],pink:["Rosa","#F29BC4"]};
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX"];
+const $ = id => document.getElementById(id);
+const pretty = n => n.split("-").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+const allGens = [...new Set(POKEDEX.map(p => p.generacion))].sort((a,b)=>a-b);
+// Parámetros opcionales en la URL: ?gen=1,2&partida=abc (o en el #)
+const params = new URLSearchParams((location.search || "") + "&" + (location.hash || "").replace(/^#/, ""));
+const urlGens = (params.get("gen") || "").split(",").map(Number).filter(g => allGens.includes(g));
+const partida = params.get("partida") || CONFIG.partida || "libre";
+const KEY = "aqp:" + partida;
+const store = {
+get(){ try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch(e){ return null; } },
+set(v){ try { localStorage.setItem(KEY, JSON.stringify(v)); } catch(e){} }
+};
+const saved = store.get() || {};
+const state = {
+crossed: new Set(saved.crossed || []),
+gens: new Set(urlGens.length ? urlGens : (saved.gens && saved.gens.length ? saved.gens : (CONFIG.gens && CONFIG.gens.length ? CONFIG.gens : allGens))),
+types: new Set(), colors: new Set(), typeMode: "any", q: "", hideX: !!saved.hideX,
+history: []
+};
+const persist = () => store.set({crossed:[...state.crossed], gens:[...state.gens], hideX:state.hideX});
+if (CONFIG.titulo) $("sub").textContent = CONFIG.titulo;
+// ---------- sprites
+function spriteEl(id){
+const s = CONFIG.sprite || {};
+if (s.mode === "sheet"){
+const d = document.createElement("div");
+d.className = "spr";
+const i = id - 1, c = i % s.cols, r = Math.floor(i / s.cols);
+d.style.backgroundPosition = `-${c*s.size}px -${r*s.size}px`;
+return d;
+}
+const img = document.createElement("img");
+img.className = "spr"; img.loading = "lazy"; img.alt = ""; img.width = 64; img.height = 64;
+img.src = s.url.replace("{id}", id);
+return img;
+}
+if (CONFIG.sprite && CONFIG.sprite.mode === "sheet"){
+const st = document.createElement("style");
+st.textContent = `.card div.spr{background-image:url("${CONFIG.sprite.src}")}`;
+document.head.append(st);
+}
+// ---------- build controls
+function chip(parent, cls, label, pressed, onClick, extra){
+const b = document.createElement("button");
+b.type = "button"; b.className = "chip " + cls; b.setAttribute("aria-pressed", pressed);
+if (extra) extra(b);
+b.append(label); b.addEventListener("click", onClick); parent.append(b); return b;
+}
+allGens.forEach(g => chip($("gens"), "gen", ROMAN[g] || String(g), state.gens.has(g), e => {
+state.gens.has(g) ? state.gens.delete(g) : state.gens.add(g);
+if (!state.gens.size) state.gens.add(g);
+syncPressed(); persist(); render();
+}, b => { b.dataset.gen = g; b.title = "Generación " + g; }));
+$("genAll").onclick = () => { allGens.forEach(g => state.gens.add(g)); syncPressed(); persist(); render(); };
+Object.entries(TYPES).forEach(([k,[name,c]]) => chip($("types"), "type", name, false, () => {
+state.types.has(k) ? state.types.delete(k) : state.types.add(k); syncPressed(); render();
+}, b => { b.dataset.type = k; b.style.setProperty("--c", c); const d = document.createElement("span"); d.className = "dot"; b.append(d); }));
+Object.entries(COLORS).forEach(([k,[name,c]]) => {
+const b = document.createElement("button");
+b.type = "button"; b.className = "sw"; b.dataset.color = k; b.title = name; b.setAttribute("aria-label", name);
+b.setAttribute("aria-pressed", "false"); b.style.setProperty("--c", c);
+b.onclick = () => { state.colors.has(k) ? state.colors.delete(k) : state.colors.add(k); syncPressed(); render(); };
+$("colors").append(b);
+});
+$("modeAny").onclick = () => { state.typeMode = "any"; syncPressed(); render(); };
+$("modeAll").onclick = () => { state.typeMode = "all"; syncPressed(); render(); };
+$("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
+$("hideX").checked = state.hideX;
+$("hideX").onchange = e => { state.hideX = e.target.checked; persist(); render(); };
+$("clearFilters").onclick = () => { state.types.clear(); state.colors.clear(); state.q = ""; $("q").value = ""; syncPressed(); render(); };
+function syncPressed(){
+document.querySelectorAll("[data-gen]").forEach(b => b.setAttribute("aria-pressed", state.gens.has(+b.dataset.gen)));
+document.querySelectorAll("[data-type]").forEach(b => b.setAttribute("aria-pressed", state.types.has(b.dataset.type)));
+document.querySelectorAll("[data-color]").forEach(b => b.setAttribute("aria-pressed", state.colors.has(b.dataset.color)));
+$("modeAny").setAttribute("aria-pressed", state.typeMode === "any");
+$("modeAll").setAttribute("aria-pressed", state.typeMode === "all");
+}
+// ---------- cards
+const cards = new Map();
+const frag = document.createDocumentFragment();
+POKEDEX.forEach(p => {
+const b = document.createElement("button");
+b.type = "button"; b.className = "card";
+const tnames = p.tipos.map(t => (TYPES[t]||[t])[0]).join(" / ");
+b.title = `${pretty(p.nombre)} · ${tnames} · ${(COLORS[p.color]||[p.color])[0]} · Gen ${p.generacion}`;
+const num = document.createElement("span"); num.className = "num"; num.textContent = "#" + String(p.id).padStart(4, "0");
+const name = document.createElement("span"); name.className = "name"; name.textContent = pretty(p.nombre);
+const types = document.createElement("span"); types.className = "types";
+p.tipos.forEach(t => { const i = document.createElement("i"); i.style.setProperty("--c", (TYPES[t]||["","#999"])[1]); types.append(i); });
+b.append(num, spriteEl(p.id), name, types);
+b.onclick = () => {
+state.history.push([...state.crossed]);
+state.crossed.has(p.id) ? state.crossed.delete(p.id) : state.crossed.add(p.id);
+persist(); render();
+};
+p._search = (p.nombre.replace(/-/g, " ") + " " + p.id).toLowerCase();
+cards.set(p.id, b); frag.append(b);
+});
+$("grid").append(frag);
+// ---------- filtering
+const inPlay = p => state.gens.has(p.generacion);
+function matchesFilters(p){
+if (state.q && !p._search.includes(state.q.replace(/^#/, "").replace(/^0+/, ""))) return false;
+if (state.colors.size && !state.colors.has(p.color)) return false;
+if (state.types.size){
+const hits = [...state.types].filter(t => p.tipos.includes(t)).length;
+if (state.typeMode === "any" ? hits === 0 : hits < state.types.size) return false;
+}
+return true;
+}
+const hasFilters = () => !!(state.q || state.colors.size || state.types.size);
+function render(){
+let shown = 0, total = 0, left = 0;
+POKEDEX.forEach(p => {
+const c = cards.get(p.id), x = state.crossed.has(p.id), play = inPlay(p);
+if (play){ total++; if (!x) left++; }
+const vis = play && matchesFilters(p) && !(state.hideX && x);
+c.classList.toggle("off", !vis);
+c.classList.toggle("x", x);
+c.setAttribute("aria-pressed", x);
+if (vis) shown++;
+});
+$("left").textContent = left;
+$("leftOf").textContent = `de ${total} siguen en pie`;
+$("empty").hidden = shown > 0;
+const f = hasFilters();
+$("xShown").disabled = !f; $("xRest").disabled = !f;
+$("undo").disabled = !state.history.length;
+const bits = [];
+if (state.types.size) bits.push([...state.types].map(t => TYPES[t][0]).join(state.typeMode === "all" ? " + " : " o "));
+if (state.colors.size) bits.push([...state.colors].map(c => COLORS[c][0]).join(" o "));
+if (state.q) bits.push(`“${state.q}”`);
+$("status").textContent = f ? `Mostrando ${shown}: ${bits.join(" · ")}` : `Mostrando ${shown} Pokémon · Gen ${[...state.gens].sort((a,b)=>a-b).map(g => ROMAN[g]).join(", ")}`;
+$("activeSum").textContent = f ? bits.join(" · ") : "";
+}
+function bulk(pred){
+state.history.push([...state.crossed]);
+let n = 0;
+POKEDEX.forEach(p => { if (inPlay(p) && pred(p) && !state.crossed.has(p.id)){ state.crossed.add(p.id); n++; } });
+persist(); render();
+$("status").textContent = `Tachados ${n} Pokémon.`;
+}
+$("xShown").onclick = () => bulk(p => matchesFilters(p));
+$("xRest").onclick = () => bulk(p => !matchesFilters(p));
+$("undo").onclick = () => { const prev = state.history.pop(); if (prev){ state.crossed = new Set(prev); persist(); render(); } };
+$("reset").onclick = () => { if (!state.crossed.size) return; state.history.push([...state.crossed]); state.crossed.clear(); persist(); render(); $("status").textContent = "Tablero reiniciado. Puedes deshacerlo."; };
+if (window.matchMedia("(max-width: 899px)").matches) $("filtersBox").open = false;
+render();
+})();
+</script>
+</html>
