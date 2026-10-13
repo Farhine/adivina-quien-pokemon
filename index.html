@@ -57,6 +57,10 @@ input[type=search]:focus-visible,button:focus-visible{outline:2px solid var(--ac
 .chip.gen{font-family:var(--f-num);font-size:16px;font-weight:600;min-width:40px;justify-content:center}
 .chip.type .dot{width:10px;height:10px;border-radius:50%;background:var(--c)}
 .chip.type[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.rango{display:flex;align-items:center;gap:6px}
+.rango input{width:100%;min-width:0;font:inherit;font-size:14px;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.rango input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rango span{font-size:12px;color:var(--ink-2)}
 .swatches{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .sw{aspect-ratio:1;max-width:100%;border-radius:10px;border:1px solid var(--line);background:var(--c);cursor:pointer;position:relative}
 .sw[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
@@ -72,12 +76,13 @@ input[type=search]:focus-visible,button:focus-visible{outline:2px solid var(--ac
 .btn:disabled{opacity:.45;cursor:default}
 .hint{font-size:12.5px;color:var(--ink-2);margin:0}
 .status{font-size:13px;color:var(--ink-2);min-height:1.2em;margin:0 0 10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
 .card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px 9px;background:var(--surface);border:1px solid var(--line);border-radius:12px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;box-shadow:var(--shadow);transition:transform .12s,background .12s}
 .card:hover{transform:translateY(-1px)}
 .card .num{font:500 13px/1 var(--f-num);color:var(--ink-2);font-variant-numeric:tabular-nums;align-self:flex-start}
-.card .body{display:flex;align-items:center;justify-content:center;gap:3px;width:100%}
-.card .dims{display:flex;flex-direction:column;gap:2px;white-space:nowrap;font:500 10px/1.1 var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.card .body{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px;width:100%}
+.card .body .spr{justify-self:center}
+.card .dims{display:flex;flex-direction:column;gap:2px;text-align:right;white-space:nowrap;font:500 10px/1.1 var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2)}
 .card .dims b{font-weight:600;color:var(--ink)}
 .notes{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px}
 .notes>summary{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-weight:600;cursor:pointer;list-style:none}
@@ -86,7 +91,7 @@ input[type=search]:focus-visible,button:focus-visible{outline:2px solid var(--ac
 .notes[open]>summary::after{content:"\25B4"}
 .notes textarea{display:block;width:100%;border:0;border-top:1px solid var(--line);border-radius:0 0 14px 14px;background:transparent;color:var(--ink);font:inherit;line-height:1.5;padding:12px 16px;min-height:130px;resize:vertical}
 .notes textarea:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.card .spr{width:64px;height:64px;image-rendering:pixelated;background-repeat:no-repeat}
+.card .spr{width:72px;height:72px;image-rendering:pixelated;background-repeat:no-repeat}
 .card img.spr{object-fit:contain}
 .card .name{font:600 13px/1.15 var(--f-body);overflow-wrap:anywhere}
 .card .types{display:flex;gap:3px;margin-top:2px}
@@ -128,6 +133,22 @@ footer{margin-top:24px;font-size:12px;color:var(--ink-2)}
 </span>
 </div>
 <div class="chips" id="types"></div>
+</div>
+<div class="group">
+<label class="label" for="pesoMin">Peso (kg)</label>
+<div class="rango">
+<input type="number" id="pesoMin" inputmode="decimal" min="0" step="0.1" placeholder="desde">
+<span>a</span>
+<input type="number" id="pesoMax" inputmode="decimal" min="0" step="0.1" placeholder="hasta">
+</div>
+</div>
+<div class="group">
+<label class="label" for="altMin">Altura (m)</label>
+<div class="rango">
+<input type="number" id="altMin" inputmode="decimal" min="0" step="0.1" placeholder="desde">
+<span>a</span>
+<input type="number" id="altMax" inputmode="decimal" min="0" step="0.1" placeholder="hasta">
+</div>
 </div>
 <div class="group">
 <div class="label">Color <button type="button" id="clearFilters">Quitar filtros</button></div>
@@ -195,6 +216,7 @@ const state = {
 crossed: new Set(saved.crossed || []),
 gens: new Set(urlGens.length ? urlGens : (saved.gens && saved.gens.length ? saved.gens : (CONFIG.gens && CONFIG.gens.length ? CONFIG.gens : allGens))),
 types: new Set(), colors: new Set(), typeMode: "any", q: "", hideX: !!saved.hideX, notas: saved.notas || "",
+pesoMin: null, pesoMax: null, altMin: null, altMax: null,
 history: []
 };
 const persist = () => store.set({crossed:[...state.crossed], gens:[...state.gens], hideX:state.hideX, notas:state.notas});
@@ -249,7 +271,17 @@ $("modeAll").onclick = () => { state.typeMode = "all"; syncPressed(); render(); 
 $("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
 $("hideX").checked = state.hideX;
 $("hideX").onchange = e => { state.hideX = e.target.checked; persist(); render(); };
-$("clearFilters").onclick = () => { state.types.clear(); state.colors.clear(); state.q = ""; $("q").value = ""; syncPressed(); render(); };
+const RANGOS = ["pesoMin", "pesoMax", "altMin", "altMax"];
+RANGOS.forEach(id => $(id).addEventListener("input", e => {
+const v = parseFloat(e.target.value.replace(",", "."));
+state[id] = isNaN(v) ? null : v;
+render();
+}));
+$("clearFilters").onclick = () => {
+state.types.clear(); state.colors.clear(); state.q = ""; $("q").value = "";
+RANGOS.forEach(id => { state[id] = null; $(id).value = ""; });
+syncPressed(); render();
+};
 function syncPressed(){
 document.querySelectorAll("[data-gen]").forEach(b => b.setAttribute("aria-pressed", state.gens.has(+b.dataset.gen)));
 document.querySelectorAll("[data-type]").forEach(b => b.setAttribute("aria-pressed", state.types.has(b.dataset.type)));
@@ -290,13 +322,21 @@ const inPlay = p => state.gens.has(p.generacion);
 function matchesFilters(p){
 if (state.q && !p._search.includes(state.q.replace(/^#/, "").replace(/^0+/, ""))) return false;
 if (state.colors.size && !state.colors.has(p.color)) return false;
+if (state.pesoMin !== null && p.peso < state.pesoMin) return false;
+if (state.pesoMax !== null && p.peso > state.pesoMax) return false;
+if (state.altMin !== null && p.altura < state.altMin) return false;
+if (state.altMax !== null && p.altura > state.altMax) return false;
 if (state.types.size){
 const hits = [...state.types].filter(t => p.tipos.includes(t)).length;
 if (state.typeMode === "any" ? hits === 0 : hits < state.types.size) return false;
 }
 return true;
 }
-const hasFilters = () => !!(state.q || state.colors.size || state.types.size);
+const hayRango = () => RANGOS.some(id => state[id] !== null);
+const hasFilters = () => !!(state.q || state.colors.size || state.types.size || hayRango());
+const textoRango = (min, max, uni) =>
+min !== null && max !== null ? `${cifra(min)}–${cifra(max)} ${uni}` :
+min !== null ? `desde ${cifra(min)} ${uni}` : `hasta ${cifra(max)} ${uni}`;
 function render(){
 let shown = 0, total = 0, left = 0;
 POKEDEX.forEach(p => {
@@ -317,6 +357,8 @@ $("undo").disabled = !state.history.length;
 const bits = [];
 if (state.types.size) bits.push([...state.types].map(t => TYPES[t][0]).join(state.typeMode === "all" ? " + " : " o "));
 if (state.colors.size) bits.push([...state.colors].map(c => COLORS[c][0]).join(" o "));
+if (state.pesoMin !== null || state.pesoMax !== null) bits.push(textoRango(state.pesoMin, state.pesoMax, "kg"));
+if (state.altMin !== null || state.altMax !== null) bits.push(textoRango(state.altMin, state.altMax, "m"));
 if (state.q) bits.push(`“${state.q}”`);
 $("status").textContent = f ? `Mostrando ${shown}: ${bits.join(" · ")}` : `Mostrando ${shown} Pokémon · Gen ${[...state.gens].sort((a,b)=>a-b).map(g => ROMAN[g]).join(", ")}`;
 $("activeSum").textContent = f ? bits.join(" · ") : "";
