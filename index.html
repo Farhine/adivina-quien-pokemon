@@ -72,14 +72,13 @@ input[type=search]:focus-visible,button:focus-visible{outline:2px solid var(--ac
 .btn:disabled{opacity:.45;cursor:default}
 .hint{font-size:12.5px;color:var(--ink-2);margin:0}
 .status{font-size:13px;color:var(--ink-2);min-height:1.2em;margin:0 0 10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:8px}
 .card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px 9px;background:var(--surface);border:1px solid var(--line);border-radius:12px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;box-shadow:var(--shadow);transition:transform .12s,background .12s}
 .card:hover{transform:translateY(-1px)}
-.card .meta{display:flex;align-items:baseline;gap:5px;width:100%;white-space:nowrap;font-family:var(--f-num);font-variant-numeric:tabular-nums;line-height:1}
-.card .meta b{font-size:14px;font-weight:600;color:var(--ink)}
-.card .meta i{font-size:11px;font-style:normal;color:var(--ink-2)}
-.card .foot{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:3px}
-.card .foot .num{font:500 12px/1 var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.card .num{font:500 13px/1 var(--f-num);color:var(--ink-2);font-variant-numeric:tabular-nums;align-self:flex-start}
+.card .body{display:flex;align-items:center;justify-content:center;gap:3px;width:100%}
+.card .dims{display:flex;flex-direction:column;gap:2px;white-space:nowrap;font:500 10px/1.1 var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.card .dims b{font-weight:600;color:var(--ink)}
 .notes{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px}
 .notes>summary{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-weight:600;cursor:pointer;list-style:none}
 .notes>summary::-webkit-details-marker{display:none}
@@ -90,7 +89,7 @@ input[type=search]:focus-visible,button:focus-visible{outline:2px solid var(--ac
 .card .spr{width:64px;height:64px;image-rendering:pixelated;background-repeat:no-repeat}
 .card img.spr{object-fit:contain}
 .card .name{font:600 13px/1.15 var(--f-body);overflow-wrap:anywhere}
-.card .types{display:flex;gap:3px}
+.card .types{display:flex;gap:3px;margin-top:2px}
 .card .types i{width:18px;height:5px;border-radius:3px;background:var(--c)}
 .card.x{background:var(--crossed-bg);box-shadow:none}
 .card.x .spr{filter:grayscale(1);opacity:.28}
@@ -266,16 +265,17 @@ const b = document.createElement("button");
 b.type = "button"; b.className = "card";
 const tnames = p.tipos.map(t => (TYPES[t]||[t])[0]).join(" / ");
 b.title = `${pretty(p.nombre)} · ${tnames} · ${(COLORS[p.color]||[p.color])[0]} · Gen ${p.generacion} · ${cifra(p.peso)} kg · ${cifra(p.altura)} m`;
-const head = document.createElement("span"); head.className = "meta";
-const kg = document.createElement("b"); kg.textContent = cifra(p.peso) + " kg";
-const mt = document.createElement("i"); mt.textContent = cifra(p.altura) + " m";
 const num = document.createElement("span"); num.className = "num"; num.textContent = "#" + String(p.id).padStart(4, "0");
-head.append(kg, mt);
+const dims = document.createElement("span"); dims.className = "dims";
+const kg = document.createElement("b"); kg.textContent = cifra(p.peso) + " kg";
+const mt = document.createElement("span"); mt.textContent = cifra(p.altura) + " m";
+dims.append(kg, mt);
+const body = document.createElement("span"); body.className = "body";
+body.append(spriteEl(p.id), dims);
 const name = document.createElement("span"); name.className = "name"; name.textContent = pretty(p.nombre);
 const types = document.createElement("span"); types.className = "types";
 p.tipos.forEach(t => { const i = document.createElement("i"); i.style.setProperty("--c", (TYPES[t]||["","#999"])[1]); types.append(i); });
-const foot = document.createElement("span"); foot.className = "foot"; foot.append(types, num);
-b.append(head, spriteEl(p.id), name, foot);
+b.append(num, body, name, types);
 b.onclick = () => {
 state.history.push([...state.crossed]);
 state.crossed.has(p.id) ? state.crossed.delete(p.id) : state.crossed.add(p.id);
