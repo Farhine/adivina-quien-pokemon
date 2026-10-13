@@ -79,11 +79,9 @@ input[type=search]:focus-visible,button:focus-visible{outline:2px solid var(--ac
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
 .card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px 9px;background:var(--surface);border:1px solid var(--line);border-radius:12px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;box-shadow:var(--shadow);transition:transform .12s,background .12s}
 .card:hover{transform:translateY(-1px)}
-.card .num{font:500 13px/1 var(--f-num);color:var(--ink-2);font-variant-numeric:tabular-nums;align-self:flex-start}
-.card .body{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px;width:100%}
-.card .body .spr{justify-self:center}
-.card .dims{display:flex;flex-direction:column;gap:2px;text-align:right;white-space:nowrap;font:500 10px/1.1 var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2)}
-.card .dims b{font-weight:600;color:var(--ink)}
+.card .head{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;width:100%;font:500 13px/1.15 var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.card .dims{display:flex;flex-direction:column;text-align:right;white-space:nowrap}
+.card .dims b{font-weight:500}
 .notes{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px}
 .notes>summary{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-weight:600;cursor:pointer;list-style:none}
 .notes>summary::-webkit-details-marker{display:none}
@@ -302,12 +300,12 @@ const dims = document.createElement("span"); dims.className = "dims";
 const kg = document.createElement("b"); kg.textContent = cifra(p.peso) + " kg";
 const mt = document.createElement("span"); mt.textContent = cifra(p.altura) + " m";
 dims.append(kg, mt);
-const body = document.createElement("span"); body.className = "body";
-body.append(spriteEl(p.id), dims);
+const head = document.createElement("span"); head.className = "head";
+head.append(num, dims);
 const name = document.createElement("span"); name.className = "name"; name.textContent = pretty(p.nombre);
 const types = document.createElement("span"); types.className = "types";
 p.tipos.forEach(t => { const i = document.createElement("i"); i.style.setProperty("--c", (TYPES[t]||["","#999"])[1]); types.append(i); });
-b.append(num, body, name, types);
+b.append(head, spriteEl(p.id), name, types);
 b.onclick = () => {
 state.history.push([...state.crossed]);
 state.crossed.has(p.id) ? state.crossed.delete(p.id) : state.crossed.add(p.id);
